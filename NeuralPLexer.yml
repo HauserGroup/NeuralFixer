@@ -5,8 +5,9 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
+  - python>=3.10
+  - pip
   - biopython
-  - prody
   - deprecated
   - hydra-core=1.1.1
   - dm-tree
@@ -22,7 +23,6 @@ dependencies:
   - pandas
   - rdkit
   - rmsd
-  - tmalign
   - tensorboard
   - jupyter
   - tqdm

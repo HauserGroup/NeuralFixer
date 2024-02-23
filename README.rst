@@ -1,12 +1,8 @@
 ====
-NeuralPLexer
+NeuralPlexer but with pLDDT and no CUDA
 ====
 
-Official implementation of NeuralPLexer, a deep generative model to jointly predict protein-ligand complex 3D structures and beyond.
-
-.. image:: docs/demo2_122023.gif
-  :align: center
-  :width: 600
+**This has been modified to run on CPU without CUDA by unpinning a bunch of dependencies. Also contains bugfixes for which I take no responsibility. Also outputs pLDDTs**
 
 Reference
 -----
@@ -15,15 +11,9 @@ Reference
 
 Pretrained model checkpoints described in the published manuscript, downstream evaluation datasets, and predicted structures are available at the following Zenodo repository for **non-commercial usage** under the CC BY-NC-SA 4.0 license: https://doi.org/10.5281/zenodo.10373581.
 
-Installation
------
+Unofficial implementation of NeuralPLexer, a deep generative model to jointly predict protein-ligand complex 3D structures and beyond. Modified to run without CUDA and few bugfixes and linting.
 
-A GPU machine with CUDA>=10.2 support is required to run the model. For a Linux environment, the following commands can be used to install the package:
-
-.. code-block:: bash
-
-    make environment
-    make install
+Hopefully outputs pLDDT annotations. Dependencies have been unpinned so your mileage may vary. See `requirements.txt` for additional install of `pytorch3d`.
 
 
 Model inference for new protein-ligand pairs
@@ -46,7 +36,7 @@ Example usage for the base model with a template structure in pdb format:
                            --sampler=langevin_simulated_annealing
 
 
-NeuralPLexer CLI supports the prediction of biological complexes without ligands, with a single ligand, with multiple ligands (e.g. substrate-cofactor systems), 
+NeuralPLexer CLI supports the prediction of biological complexes without ligands, with a single ligand, with multiple ligands (e.g. substrate-cofactor systems),
 and/or with receptors of single or multiple protein chains. Common input options are:
 
 - :code:`input-receptor` and :code:`input-ligand` are the input protein and ligand structures;
@@ -78,4 +68,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
