@@ -864,20 +864,20 @@ def inplace_to_torch(sample):
 #     new_sample["metadata"] = sample["metadata"]
 #     return new_sample
 
-
-def inplace_to_cuda(sample):
-    sample["features"] = {k: v.cuda() for k, v in sample["features"].items()}
-    sample["indexer"] = {k: v.cuda() for k, v in sample["indexer"].items()}
-    if "labels" in sample.keys():
-        sample["labels"] = sample["labels"].cuda()
-    return sample
+# Deprecated in favor of inplace_to_device
+# def inplace_to_cuda(sample):
+#     sample["features"] = {k: v.cuda() for k, v in sample["features"].items()}
+#     sample["indexer"] = {k: v.cuda() for k, v in sample["indexer"].items()}
+#     if "labels" in sample.keys():
+#         sample["labels"] = sample["labels"].cuda()
+#     return sample
 
 
 def inplace_to_device(sample, device):
     sample["features"] = {k: v.to(device) for k, v in sample["features"].items()}
     sample["indexer"] = {k: v.to(device) for k, v in sample["indexer"].items()}
     if "labels" in sample.keys():
-        sample["labels"] = sample["labels"].cuda()
+        sample["labels"] = sample["labels"].to(device)
     return sample
 
 

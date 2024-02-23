@@ -788,19 +788,23 @@ class NeuralPlexer(pl.LightningModule):
     def run_confidence_estimation(self, batch, struct, return_avg_stats=False):
         batch_size = batch["metadata"]["num_structid"]
         batch["features"]["input_protein_coords"] = struct["receptor_padded"].clone()
+
         if struct["ligands"] is not None:
             batch["features"]["input_ligand_coords"] = struct["ligands"].clone()
         else:
             batch["features"]["input_ligand_coords"] = None
+
         self._assign_timestep_encodings(batch, 0.0)
         batch = self._run_encoder_stack(batch, use_template=False, use_plddt=False)
         self._run_contact_map_stack(batch, iter_id="confidence")
+
         conf_out = self._run_confidence_head(batch)
         conf_rep = (
             conf_out["final_embedding_prot_res"][:, 0]
             .contiguous()
             .view(batch_size, -1, self.config.score_head.fiber_dim)
         )
+
         if struct["ligands"] is not None:
             conf_rep_lig = (
                 conf_out["final_embedding_lig_atom"][:, 0]
@@ -808,6 +812,7 @@ class NeuralPlexer(pl.LightningModule):
                 .view(batch_size, -1, self.config.score_head.fiber_dim)
             )
             conf_rep = torch.cat([conf_rep, conf_rep_lig], dim=1)
+
         plddt_logits = F.log_softmax(self.plddt_gram_head(conf_rep), dim=-1)
         batch["outputs"]["plddt_logits"] = plddt_logits
         plddt_gram = torch.exp(plddt_logits)
@@ -817,8 +822,9 @@ class NeuralPlexer(pl.LightningModule):
 
         if return_avg_stats:
             plddt_avg = (
-                batch["outputs"]["plddt"].view(batch_size, -1).mean(dim=1)
-            ).detach()
+                batch["outputs"]["plddt"].view(batch_size, -1).mean(dim=1).detach()
+            )
+
             if struct["ligands"] is not None:
                 plddt_avg_lig = (
                     batch["outputs"]["plddt"]
@@ -828,9 +834,10 @@ class NeuralPlexer(pl.LightningModule):
                 )
             else:
                 plddt_avg_lig = None
-            return plddt_avg, plddt_avg_lig
 
-        return batch
+            return plddt_avg, plddt_avg_lig
+        else:
+            return batch
 
     def _get_epoch_outputs(self, outs):
         preds = [v["out"] for v in outs]

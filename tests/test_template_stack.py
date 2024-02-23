@@ -1,48 +1,13 @@
 import sys
-import os
-import math
-import argparse
 import torch
 import numpy as np
-from neuralplexer.model.config import (
-    get_base_config,
-    _attach_binding_task_config,
-    _attach_ligand_pretraining_task_config,
-)
-from deprecated import deprecated
-from rdkit import Chem
-from neuralplexer.model.common import segment_mean, segment_sum
-from neuralplexer.model.wrappers import NeuralPlexer
 from neuralplexer.data.pipeline import (
     process_pdb,
     process_mol_file,
     merge_protein_and_ligands,
     process_template_protein_features,
-    to_torch,
-    inplace_to_torch,
-    inplace_to_cuda,
 )
 import tqdm
-from neuralplexer.data.indexers import collate_numpy, collate_samples
-from neuralplexer.data.dataloading import load_msgpack
-from neuralplexer.util.frame import (
-    RigidTransform,
-    internal_to_cartesian,
-    cartesian_to_internal,
-    get_frame_matrix,
-)
-from neuralplexer.util.pdb3d import get_lddt_bs
-from af_common.protein import Protein, from_prediction, to_pdb
-from rdkit.Chem import AllChem
-from rdkit.Geometry import Point3D
-from rdkit.Chem.rdmolops import CombineMols
-from rdkit.Chem.rdForceFieldHelpers import GetUFFVdWParams
-import pandas as pd
-import re
-import subprocess
-from subprocess import check_output
-import multiprocessing as mp
-import glob
 
 torch.set_grad_enabled(False)
 
@@ -55,7 +20,7 @@ def get_sample_set(lig_path, rec_path, chain_id=None):
                 return_mol=True,
                 pair_feats=True,
             )
-        except:
+        except:  # noqa
             lig_sample, mol_ref = process_mol_file(
                 lig_path,
                 sanitize=False,

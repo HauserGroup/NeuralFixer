@@ -17,8 +17,8 @@ from neuralplexer.data.indexers import collate_numpy
 from neuralplexer.data.physical import calc_heavy_atom_LJ_clash_fraction
 from neuralplexer.data.pipeline import (
     featurize_protein_and_ligands,
-    inplace_to_cuda,
     inplace_to_torch,
+    inplace_to_device,
     process_mol_file,
     write_conformer_sdf,
     write_pdb_models,
@@ -97,7 +97,7 @@ def create_full_pdb_with_zero_coordinates(sequence: str, filename) -> None:
             chain_id = chr(ord(chain_id) + 1)
 
 
-def single_sample_sampling(args, model):
+def single_sample_sampling(args, model, device: torch.device) -> int:
     sample, mol = featurize_protein_and_ligands(
         args.input_ligand,
         args.input_receptor,
@@ -105,8 +105,8 @@ def single_sample_sampling(args, model):
         template_path=args.input_template,
     )
     sample = inplace_to_torch(collate_numpy([sample]))
-    if args.cuda:
-        sample = inplace_to_cuda(sample)
+
+    sample = inplace_to_device(sample, device)
 
     all_frames = model.sample_pl_complex_structures(
         sample,
@@ -154,6 +154,7 @@ def multi_pose_sampling(
     args,
     model,
     out_path,
+    device,
     save_pdb=True,
     separate_pdb=True,
     chain_id=None,
@@ -177,8 +178,7 @@ def multi_pose_sampling(
         )
         np_sample_batched = collate_numpy([np_sample for _ in range(chunk_size)])
         sample = inplace_to_torch(np_sample_batched)
-        if args.cuda:
-            sample = inplace_to_cuda(sample)
+        sample = inplace_to_device(sample, device)
         output_struct = model.sample_pl_complex_structures(
             sample,
             sampler=args.sampler,
@@ -573,7 +573,6 @@ def main():
     parser.add_argument("--task", required=True, type=str)
     parser.add_argument("--sample-id", default=0, type=int)
     parser.add_argument("--template-id", default=0, type=int)
-    parser.add_argument("--cuda", action="store_true")
     parser.add_argument("--model-checkpoint", type=str)
     parser.add_argument("--input-ligand", type=str)
     parser.add_argument("--input-receptor", type=str)
@@ -592,8 +591,11 @@ def main():
     parser.add_argument("--detect-covalent", action="store_true")
     parser.add_argument("--use-template", action="store_true")
     parser.add_argument("--csv-path", type=str)
+    parser.add_argument("--confidence", action="store_true")
     args = parser.parse_args()
     config = get_base_config()
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if args.model_checkpoint is not None:
         # No need to specify this when loading the entire model
@@ -617,14 +619,17 @@ def main():
 
     model.eval()
 
-    if args.cuda:
+    if torch.cuda.is_available():
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
-        model.cuda()
+    else:
+        torch.set_default_tensor_type(torch.FloatTensor)
+
+    model.to(device)
 
     if args.start_time != "auto":
         args.start_time = float(args.start_time)
     if args.task == "single_sample_trajectory":
-        single_sample_sampling(args, model)
+        single_sample_sampling(args, model, device=device)
     elif args.task == "batched_structure_sampling":
         ligand_paths = list(args.input_ligand.split("|"))
         if not args.input_receptor.endswith(".pdb"):
@@ -642,7 +647,9 @@ def main():
             args.out_path,
             template_path=args.input_template,
             separate_pdb=False,
+            device=device,
         )
+    # TODO: Remove CUDA requirement from these tasks
     elif args.task == "structure_prediction_benchmarking":
         pl_structure_prediction_benchmarking(args, model)
     elif args.task == "pdbbind_benchmarking":

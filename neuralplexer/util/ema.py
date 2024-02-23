@@ -240,9 +240,10 @@ class EMAOptimizer(torch.optim.Optimizer):
     def step(self, closure=None, **kwargs):
         self.join()
 
-        if self.first_iteration:
-            if any(p.is_cuda for p in self.all_parameters()):
-                self.stream = torch.cuda.Stream()
+        if torch.cuda.is_available() and not self.cpu_offload:
+            if self.first_iteration:
+                if any(p.is_cuda for p in self.all_parameters()):
+                    self.stream = torch.cuda.Stream()
 
             self.first_iteration = False
 
@@ -267,17 +268,18 @@ class EMAOptimizer(torch.optim.Optimizer):
 
     @torch.no_grad()
     def update(self):
-        if self.stream is not None:
-            self.stream.wait_stream(torch.cuda.current_stream())
+        if torch.cuda.is_available() and not self.cpu_offload:
+            if self.stream is not None:
+                self.stream.wait_stream(torch.cuda.current_stream())
 
-        with torch.cuda.stream(self.stream):
-            current_model_state = tuple(
-                param.data.to(self.device, non_blocking=True)
-                for param in self.all_parameters()
-            )
+            with torch.cuda.stream(self.stream):
+                current_model_state = tuple(
+                    param.data.to(self.device, non_blocking=True)
+                    for param in self.all_parameters()
+                )
 
-            if self.device.type == "cuda":
-                ema_update(self.ema_params, current_model_state, self.decay)
+                if self.device.type == "cuda":
+                    ema_update(self.ema_params, current_model_state, self.decay)
 
         if self.device.type == "cpu":
             self.thread = threading.Thread(
@@ -374,16 +376,14 @@ class EMAModelCheckpoint(ModelCheckpoint):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def _ema_callback(self, trainer: "pytorch_lightning.Trainer") -> Optional[EMA]:
+    def _ema_callback(self, trainer: "pl.Trainer") -> Optional[EMA]:
         ema_callback = None
         for callback in trainer.callbacks:
             if isinstance(callback, EMA):
                 ema_callback = callback
         return ema_callback
 
-    def _save_checkpoint(
-        self, trainer: "pytorch_lightning.Trainer", filepath: str
-    ) -> None:
+    def _save_checkpoint(self, trainer: "pl.Trainer", filepath: str) -> None:
         ema_callback = self._ema_callback(trainer)
         if ema_callback is not None:
             with ema_callback.save_original_optimizer_state(trainer):
@@ -400,9 +400,7 @@ class EMAModelCheckpoint(ModelCheckpoint):
         else:
             super()._save_checkpoint(trainer, filepath)
 
-    def _remove_checkpoint(
-        self, trainer: "pytorch_lightning.Trainer", filepath: str
-    ) -> None:
+    def _remove_checkpoint(self, trainer: "pl.Trainer", filepath: str) -> None:
         super()._remove_checkpoint(trainer, filepath)
         ema_callback = self._ema_callback(trainer)
         if ema_callback is not None:

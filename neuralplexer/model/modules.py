@@ -1,13 +1,16 @@
 """Core building blocks and the model wrapper."""
 
 import math
+import torch
+from torch import nn
 from typing import Optional, Tuple, Union
 
 from openfold.model.primitives import Attention
 from openfold.utils.tensor_utils import permute_final_dims
 from torch import Tensor
+import torch.nn.functional as F
 
-from neuralplexer.model.common import *
+from neuralplexer.model.common import GELUMLP, segment_softmax
 
 
 class MultiHeadAttentionConv(nn.Module):

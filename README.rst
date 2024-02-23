@@ -32,7 +32,6 @@ Example usage for the base model with a template structure in pdb format:
                            --n-samples 16 \
                            --chunk-size 4 \
                            --num-steps=40 \
-                           --cuda \
                            --sampler=langevin_simulated_annealing
 
 
