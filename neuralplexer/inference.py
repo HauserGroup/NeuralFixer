@@ -1,7 +1,5 @@
 import argparse
 import glob
-import math
-import multiprocessing as mp
 import os
 import re
 import subprocess
@@ -12,21 +10,23 @@ import numpy as np
 import pandas as pd
 import torch
 import tqdm
-from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from af_common.residue_constants import restype_1to3
 from neuralplexer.data.indexers import collate_numpy
 from neuralplexer.data.physical import calc_heavy_atom_LJ_clash_fraction
-from neuralplexer.data.pipeline import (featurize_protein_and_ligands,
-                                        inplace_to_cuda, inplace_to_torch,
-                                        process_mol_file, write_conformer_sdf,
-                                        write_pdb_models, write_pdb_single)
-from neuralplexer.model.config import (_attach_binding_task_config,
-                                       get_base_config)
+from neuralplexer.data.pipeline import (
+    featurize_protein_and_ligands,
+    inplace_to_cuda,
+    inplace_to_torch,
+    process_mol_file,
+    write_conformer_sdf,
+    write_pdb_models,
+    write_pdb_single,
+)
+from neuralplexer.model.config import get_base_config
 from neuralplexer.model.wrappers import NeuralPlexer
-from neuralplexer.util.pdb3d import (compute_ligand_rmsd, compute_tm_rmsd,
-                                     get_lddt_bs)
+from neuralplexer.util.pdb3d import compute_ligand_rmsd, compute_tm_rmsd, get_lddt_bs
 
 torch.set_grad_enabled(False)
 
@@ -230,15 +230,15 @@ def multi_pose_sampling(
                     struct_res, out_path=os.path.join(out_path, f"prot_{struct_id}.pdb")
                 )
         write_pdb_models(
-            struct_res_all, out_path=os.path.join(out_path, f"prot_all.pdb")
+            struct_res_all, out_path=os.path.join(out_path, "prot_all.pdb")
         )
     if mol is not None:
         write_conformer_sdf(
-            ref_mol, None, out_path=os.path.join(out_path, f"lig_ref.sdf")
+            ref_mol, None, out_path=os.path.join(out_path, "lig_ref.sdf")
         )
         lig_res_all = np.array(lig_res_all)
         write_conformer_sdf(
-            mol, lig_res_all, out_path=os.path.join(out_path, f"lig_all.sdf")
+            mol, lig_res_all, out_path=os.path.join(out_path, "lig_all.sdf")
         )
         for struct_id in range(len(lig_res_all)):
             write_conformer_sdf(
@@ -258,7 +258,7 @@ def pdbbind_benchmarking(args, model):
     args.start_time = 1.0
     args.exact_prior = False
     df = pd.read_csv(args.csv_path).replace({np.nan: None})
-    df = df[df["test"] == True]
+    df = df[df["test"] is True]
     res = []
     for _, row in tqdm.tqdm(df.iterrows(), total=len(df)):
         code = row["pdb_id"]
@@ -278,7 +278,7 @@ def pdbbind_benchmarking(args, model):
                 enforce_sanitization=True,
                 allow_insertion_code=True,
             )
-        except:
+        except:  # noqa
             lig_path = lig_path[:-4] + ".mol2"
             _, plddt, plddt_lig = multi_pose_sampling(
                 [lig_path],
@@ -338,7 +338,7 @@ def pdbbind_benchmarking(args, model):
                 + plddt_lig
             )
         except Exception as e:
-            warnings.warn(f"Sample {sample_id} failed: {e}")
+            warnings.warn(f"Sample failed: {e}")
             continue
         res_df = pd.DataFrame(
             columns=["index", "nrotbonds"]
@@ -378,7 +378,7 @@ def protein_inpainting_benchmarking(args, model):
                     allow_insertion_code=True,
                     confidence=False,
                 )
-            except:
+            except:  # noqa
                 lig_path = lig_path[:-4] + ".mol2"
                 ref_mol = multi_pose_sampling(
                     [lig_path],
@@ -402,7 +402,7 @@ def protein_inpainting_benchmarking(args, model):
                 lddt_bs_list.append(lddt_bs)
             lddt_bs_af2 = get_lddt_bs(template_path, ref_pdb, mol=ref_mol)
 
-            out_sdf_file = os.path.join(out_path, f"lig_all.sdf")
+            out_sdf_file = os.path.join(out_path, "lig_all.sdf")
             ret = check_output(
                 ["obrms", "-f", lig_path, out_sdf_file],
                 stderr=subprocess.DEVNULL,
@@ -513,7 +513,7 @@ def pl_structure_prediction_benchmarking(args, model):
                     tm_score_template, rmsd_template = None, None
                     template_ref_tm, template_ref_rmsd = None, None
                     template_lddt_bs = None
-                ref_lig_path = os.path.join(out_path, f"lig_ref.sdf")
+                ref_lig_path = os.path.join(out_path, "lig_ref.sdf")
                 pred_lig_path = os.path.join(out_path, f"lig_{run_idx}.sdf")
                 lig_rmsd = compute_ligand_rmsd(pred_lig_path, ref_lig_path)
                 res.append(

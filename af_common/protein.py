@@ -311,6 +311,17 @@ def _chain_end(atom_index, end_resname, chain_name, residue_index) -> str:
     )
 
 
+def res_1to3(r: int) -> str:
+    """Converts a residue index to a 3-letter code.
+    Args:
+      r: Residue index.
+    Returns:
+      3-letter code.
+    """
+    restypes = residue_constants.restypes + ["X"]
+    return residue_constants.restype_1to3.get(restypes[r], "UNK")
+
+
 def to_pdb(prot: Protein, model=1) -> str:
     """Converts a `Protein` instance to a PDB string.
 
@@ -320,8 +331,7 @@ def to_pdb(prot: Protein, model=1) -> str:
     Returns:
       PDB string.
     """
-    restypes = residue_constants.restypes + ["X"]
-    res_1to3 = lambda r: residue_constants.restype_1to3.get(restypes[r], "UNK")
+
     atom_types = residue_constants.atom_types
 
     pdb_lines = []

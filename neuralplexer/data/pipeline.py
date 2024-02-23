@@ -18,10 +18,14 @@ from af_common.protein import Protein
 from af_common.protein import from_pdb_string as af_protein_from_pdb_string
 from af_common.protein import from_prediction, to_pdb
 from neuralplexer.data.indexers import collate_numpy, tensorize_indexers
-from neuralplexer.data.molops import (compute_all_stereo_chemistry_encodings,
-                                      compute_bond_pair_triangles,
-                                      get_atom_encoding, get_bond_encoding,
-                                      get_conformers_as_tensor, mol_to_graph)
+from neuralplexer.data.molops import (
+    compute_all_stereo_chemistry_encodings,
+    compute_bond_pair_triangles,
+    get_atom_encoding,
+    get_bond_encoding,
+    get_conformers_as_tensor,
+    mol_to_graph,
+)
 
 m.patch()
 
@@ -104,7 +108,7 @@ def process_mol_file(
         if not sanitize:
             mol.UpdatePropertyCache(strict=False)
     else:
-        warnings.warn(f"No suffix found for ligand input, assuming SMILES input")
+        warnings.warn("No suffix found for ligand input, assuming SMILES input")
         mol = Chem.MolFromSmiles(fname, sanitize=sanitize)
     if sanitize:
         mol = Chem.RemoveHs(mol, updateExplicitCount=True)
@@ -353,7 +357,9 @@ def _process_molecule(
         # "num_u0ijk": len(triangle_atoms_list),
     }
     indexer = tensorize_indexers(
-        bond_atom_ids, triangle_aaabb_ids, triangle_pairs_list  # , triangle_atoms_list,
+        bond_atom_ids,
+        triangle_aaabb_ids,
+        triangle_pairs_list,  # , triangle_atoms_list,
     )
     # The target molid is alway 0
     indexer["gather_idx_i_molid"] = np.zeros((metadata["num_i"],), dtype=np.int_)
@@ -840,22 +846,23 @@ def inplace_to_torch(sample):
     return sample
 
 
-def to_torch(sample):
-    if sample is None:
-        return None
-    new_sample = {}
-    new_sample["features"] = {
-        k: torch.FloatTensor(v) for k, v in sample["features"].items()
-    }
-    new_sample["indexer"] = {
-        k: torch.LongTensor(v) for k, v in sample["indexer"].items()
-    }
-    if "labels" in sample.keys():
-        new_sample["labels"] = {
-            k: torch.FloatTensor(v) for k, v in sample["labels"].items()
-        }
-    new_sample["metadata"] = sample["metadata"]
-    return new_sample
+# This gets redefined for some reason
+# def to_torch(sample):
+#     if sample is None:
+#         return None
+#     new_sample = {}
+#     new_sample["features"] = {
+#         k: torch.FloatTensor(v) for k, v in sample["features"].items()
+#     }
+#     new_sample["indexer"] = {
+#         k: torch.LongTensor(v) for k, v in sample["indexer"].items()
+#     }
+#     if "labels" in sample.keys():
+#         new_sample["labels"] = {
+#             k: torch.FloatTensor(v) for k, v in sample["labels"].items()
+#         }
+#     new_sample["metadata"] = sample["metadata"]
+#     return new_sample
 
 
 def inplace_to_cuda(sample):
@@ -952,7 +959,7 @@ def write_conformer_sdf(mol, confs: np.array = None, out_path="test_results/debu
     try:
         for cid in range(len(confs)):
             w.write(mol, confId=cid)
-    except:
+    except:  # noqa
         w.SetKekulize(False)
         for cid in range(len(confs)):
             w.write(mol, confId=cid)
