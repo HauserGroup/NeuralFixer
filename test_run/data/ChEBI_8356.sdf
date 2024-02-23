@@ -1,0 +1,98 @@
+
+Marvin  12020813212D
+
+ 14 15  0  0  0  0            999 V2000
+   -0.5893    0.9429    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.3038    0.5304    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
+   -1.3038   -0.2947    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5893   -0.7072    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.1252   -0.2947    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.1252    0.5304    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.9098    0.7853    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0
+    0.9098   -0.5496    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3947    0.1178    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.0182    0.9429    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2197    0.1178    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.7327    0.5304    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.4472    0.9429    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.1616    0.5304    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  6  1  0  0  0  0
+  2  3  1  0  0  0  0
+  3  4  1  0  0  0  0
+  4  5  1  0  0  0  0
+  5  8  1  0  0  0  0
+  6  5  2  0  0  0  0
+  7  6  1  0  0  0  0
+  7  9  1  0  0  0  0
+  8  9  2  0  0  0  0
+  2 10  1  6  0  0  0
+  9 11  1  0  0  0  0
+ 10 12  1  0  0  0  0
+ 12 13  1  0  0  0  0
+ 13 14  1  0  0  0  0
+M  END
+> <ID>
+CHEBI:8356
+
+> <NAME>
+pramipexole
+
+> <DEFINITION>
+A member of the class of benzothiazoles that is 4,5,6,7-tetrahydro-1,3-benzothiazole in which the hydrogens at the 2 and 6-pro-S-positions are substituted by amino and propylamino groups, respectively.
+
+> <STAR>
+3
+
+> <SYNONYM>
+2,6-Benzothiazolediamine, 4,5,6,7-tetrahydro-N(sup 6)-propyl-, (S)-; (-)-Pramipexole
+
+> <IUPAC_NAME>
+(6S)-N(6)-propyl-4,5,6,7-tetrahydro-1,3-benzothiazole-2,6-diamine
+
+> <INN>
+pramipexolum; pramipexole; pramipexole; pramipexol
+
+> <FORMULA>
+C10H17N3S
+
+> <MASS>
+211.32820
+
+> <MONOISOTOPIC_MASS>
+211.11432
+
+> <CHARGE>
+0
+
+> <SMILES>
+CCCN[C@H]1CCc2nc(N)sc2C1
+
+> <INCHI>
+InChI=1S/C10H17N3S/c1-2-5-12-7-3-4-8-9(6-7)14-10(11)13-8/h7,12H,2-6H2,1H3,(H2,11,13)/t7-/m0/s1
+
+> <INCHIKEY>
+FASDKYOPVNHBLU-ZETCQYMHSA-N
+
+> <BEILSTEIN_REGISTRY_NUMBER>
+6479326
+
+> <CAS_REGISTRY_NUMBER>
+104632-26-0
+
+> <CHEMIDPLUS>
+104632-26-0
+
+> <DRUGBANK_ACCESSION>
+DB00413
+
+> <KEGG_DRUG_ACCESSION>
+D05575
+
+> <LINCS_ACCESSION>
+LSM-5243
+
+> <WIKIPEDIA_ACCESSION>
+Pramipexole
+
+$$$$
