@@ -163,7 +163,7 @@ def multi_pose_sampling(
     **kwargs,
 ):
     struct_res_all, lig_res_all = [], []
-    plddt_all, plddt_lig_all = [], []
+    plddt_all, plddt_lig_all, plddt_struct_all = [], [], []
     chunk_size = args.chunk_size
     for chunk_id in range(args.n_samples // chunk_size):
         # Resample anchor node frames
@@ -198,6 +198,10 @@ def multi_pose_sampling(
                 sample, output_struct, return_avg_stats=True
             )
 
+            sample = model.run_confidence_estimation(
+                sample, output_struct, return_avg_stats=False
+            )
+
         for struct_idx in range(args.chunk_size):
             struct_res = {
                 "features": {
@@ -219,6 +223,8 @@ def multi_pose_sampling(
                 lig_res_all.append(out_x1[struct_idx])
             if confidence:
                 plddt_all.append(plddt[struct_idx].item())
+                plddt_struct_all.append(sample["outputs"]["plddt"][struct_idx].item())
+
                 if plddt_lig is None:
                     plddt_lig_all.append(None)
                 else:
@@ -246,6 +252,13 @@ def multi_pose_sampling(
                 lig_res_all[struct_id : struct_id + 1],
                 out_path=os.path.join(out_path, f"lig_{struct_id}.sdf"),
             )
+
+    if confidence:
+        # Save Numpy all
+        np.save(os.path.join(out_path, "plddt.npy"), np.array(plddt_all))
+        np.save(os.path.join(out_path, "plddt_lig.npy"), np.array(plddt_lig_all))
+        np.save(os.path.join(out_path, "plddt_struct.npy"), np.array(plddt_struct_all))
+
     else:
         ref_mol = None
     if confidence:
