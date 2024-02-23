@@ -107,3 +107,14 @@ ENV/
 
 # ngc
 ./ngc_scripts
+
+
+# checkpoints
+*.ckpt
+*.back
+
+# Mac
+.DS_Store
+
+# PDB
+*.pdb
