@@ -8,14 +8,22 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from neuralplexer.model.common import (GELUMLP, SumPooling, segment_mean,
-                                       segment_softmax, segment_sum)
+from neuralplexer.model.common import (
+    GELUMLP,
+    SumPooling,
+    segment_mean,
+    segment_softmax,
+    segment_sum,
+)
 from neuralplexer.model.embedding import GaussianFourierEncoding1D
 from neuralplexer.model.esdm import EquivariantTransformerBlock
 from neuralplexer.model.modules import GlobalAttention, TransformerLayer
 from neuralplexer.util.distributions import MixtureGPSNetwork3D
-from neuralplexer.util.frame import (RigidTransform, cartesian_to_internal,
-                                     get_frame_matrix)
+from neuralplexer.util.frame import (
+    RigidTransform,
+    cartesian_to_internal,
+    get_frame_matrix,
+)
 from neuralplexer.util.tensorgraph import make_multi_relation_graph_batcher
 
 
@@ -271,8 +279,8 @@ def _resolve_ligand_encoder(ligand_model_config, task_config):
                 if k.startswith("encoder_stack")
             }
             model.load_state_dict(pretrained_dict)
-        except:
-            print("Could not load pretrained MHT weights, skipping")
+        except:  # noqa
+            "Could not load pretrained MHT weights, skipping (Can be safely ignored if loading from Zenodo .ckpt file)"
     return model
 
 
@@ -444,9 +452,7 @@ class MolPretrainingWrapper(pl.LightningModule, ABC):
             batch["labels"]["chemicalchecker25_sign1_value"][label_mask],
         ) / torch.std(
             batch["labels"]["chemicalchecker25_sign1_value"][label_mask]
-        ).square().add(
-            1e-8
-        )
+        ).square().add(1e-8)
         aux_loss = self.aux_metric(global_pred[:, :, 1], label_mask.float())
         return regression_loss, aux_loss
 

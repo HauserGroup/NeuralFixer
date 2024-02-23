@@ -31,7 +31,7 @@ from neuralplexer.data.pipeline import (
     inplace_to_torch,
 )
 
-from neuralplexer.common import (
+from neuralplexer.model.common import (
     GELUMLP,
     segment_sum,
     topk_edge_mask_from_logits,
@@ -820,10 +820,14 @@ class NeuralPlexer(pl.LightningModule):
             dim=-1
         )
 
+        print("PLDDT", batch["outputs"]["plddt"].size())
+
         if return_avg_stats:
             plddt_avg = (
                 batch["outputs"]["plddt"].view(batch_size, -1).mean(dim=1).detach()
             )
+
+            print("PLDDT AVG", plddt_avg.size())
 
             if struct["ligands"] is not None:
                 plddt_avg_lig = (
@@ -832,6 +836,10 @@ class NeuralPlexer(pl.LightningModule):
                     .mean(dim=1)
                     .detach()
                 )
+
+                print("NUM AA PER SAMPLE", batch["metadata"]["num_a_per_sample"][0])
+
+                print("PLDDT AVG LIG", plddt_avg_lig.size())
             else:
                 plddt_avg_lig = None
 

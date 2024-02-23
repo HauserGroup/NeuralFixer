@@ -223,7 +223,7 @@ def multi_pose_sampling(
                 lig_res_all.append(out_x1[struct_idx])
             if confidence:
                 plddt_all.append(plddt[struct_idx].item())
-                plddt_struct_all.append(sample["outputs"]["plddt"][struct_idx].item())
+                plddt_struct_all.append(sample["outputs"]["plddt"][struct_idx].numpy())
 
                 if plddt_lig is None:
                     plddt_lig_all.append(None)
@@ -257,7 +257,10 @@ def multi_pose_sampling(
         # Save Numpy all
         np.save(os.path.join(out_path, "plddt.npy"), np.array(plddt_all))
         np.save(os.path.join(out_path, "plddt_lig.npy"), np.array(plddt_lig_all))
-        np.save(os.path.join(out_path, "plddt_struct.npy"), np.array(plddt_struct_all))
+        np.save(
+            os.path.join(out_path, "plddt_struct.npy"),
+            np.array(np.vstack(plddt_struct_all)),
+        )
 
     else:
         ref_mol = None
@@ -631,11 +634,6 @@ def main():
     )
 
     model.eval()
-
-    if torch.cuda.is_available():
-        torch.set_default_tensor_type(torch.cuda.FloatTensor)
-    else:
-        torch.set_default_tensor_type(torch.FloatTensor)
 
     model.to(device)
 
