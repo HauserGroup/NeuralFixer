@@ -1,6 +1,5 @@
 name: NeuralPLexer
 channels:
-  - nvidia
   - pyg
   - bioconda
   - conda-forge
@@ -24,7 +23,7 @@ dependencies:
   - rdkit
   - rmsd
   - tensorboard
-  - jupyter
+  - jupyterlab
   - tqdm
   - python-lmdb
   - vim
