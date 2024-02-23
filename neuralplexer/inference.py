@@ -614,7 +614,9 @@ def main():
     model = NeuralPlexer.load_from_checkpoint(
         config=config, checkpoint_path=args.model_checkpoint, strict=False
     )
+
     model.eval()
+
     if args.cuda:
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
         model.cuda()
@@ -631,6 +633,7 @@ def main():
                 args.input_receptor, args.out_path + "/input.pdb"
             )
             args.input_receptor = args.out_path + "/input.pdb"
+
         multi_pose_sampling(
             ligand_paths,
             args.input_receptor,

@@ -6,25 +6,50 @@ import scipy.stats
 import tqdm
 import wandb
 from pytorch3d.ops import corresponding_points_alignment
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
 
 from neuralplexer.model.config import get_base_config, get_standard_aa_features
 from neuralplexer.model.cpm import BindingFormer, ProtFormer
 from neuralplexer.model.esdm import EquivariantStructureDenoisingModule
-from neuralplexer.model.mht_encoder import (MolPretrainingWrapper,
-                                            _resolve_ligand_encoder)
-from neuralplexer.util.sde_transform import (BranchedGaussianChainConverter,
-                                             DefaultPLCoordinateConverter,
-                                             NullPLCoordinateConverter)
+from neuralplexer.model.mht_encoder import (
+    MolPretrainingWrapper,
+    _resolve_ligand_encoder,
+)
+from neuralplexer.util.sde_transform import (
+    BranchedGaussianChainConverter,
+    DefaultPLCoordinateConverter,
+    NullPLCoordinateConverter,
+)
+
+from neuralplexer.data.physical import get_vdw_radii_array, get_vdw_radii_array_uff
+from neuralplexer.data.pipeline import (
+    collate_numpy,
+    inplace_to_device,
+    inplace_to_torch,
+)
+
+from neuralplexer.common import (
+    GELUMLP,
+    segment_sum,
+    topk_edge_mask_from_logits,
+    segment_logsumexp,
+    batched_sample_onehot,
+    segment_argmin,
+    segment_mean,
+)
+
+from neuralplexer.util.frame import (
+    apply_similarity_transform,
+    cartesian_to_internal,
+    get_frame_matrix,
+    internal_to_cartesian,
+)
+
 
 BASE_CONFIG = get_base_config()
-from neuralplexer.data.physical import (get_vdw_radii_array,
-                                        get_vdw_radii_array_uff)
-from neuralplexer.data.pipeline import (collate_numpy, inplace_to_device,
-                                        inplace_to_torch)
-from neuralplexer.model.modules import *
-from neuralplexer.util.frame import (apply_similarity_transform,
-                                     cartesian_to_internal, get_frame_matrix,
-                                     internal_to_cartesian)
 
 
 class NeuralPlexer(pl.LightningModule):
@@ -200,7 +225,7 @@ class NeuralPlexer(pl.LightningModule):
             )
 
         if infer_geometry_prior:
-            assert batch["misc"]["protein_only"] == False
+            assert batch["misc"]["protein_only"] is False
             self._infer_geometry_prior(batch, **kwargs)
 
         if score:
@@ -357,10 +382,9 @@ class NeuralPlexer(pl.LightningModule):
             lig_samemol_mask = (
                 gather_idx_i_molid[:, :, None] == gather_idx_i_molid[:, None, :]
             )
-            intermol_iscov_mask[
-                :, n_protatm_per_sample:, n_protatm_per_sample:
-            ] = intermol_iscov_mask[:, n_protatm_per_sample:, n_protatm_per_sample:] & (
-                ~lig_samemol_mask
+            intermol_iscov_mask[:, n_protatm_per_sample:, n_protatm_per_sample:] = (
+                intermol_iscov_mask[:, n_protatm_per_sample:, n_protatm_per_sample:]
+                & (~lig_samemol_mask)
             )
             knn_edge_mask = knn_edge_mask | intermol_iscov_mask
         else:
@@ -1386,6 +1410,8 @@ class NeuralPlexer(pl.LightningModule):
         ref_dist_mat: torch.Tensor,
     ):
         # True onehot distance and distogram loss
+        import torch.nn.functional as F
+
         distance_bin_idx = torch.bucketize(
             ref_dist_mat, self.dist_bins[:-1], right=True
         )
@@ -1880,7 +1906,7 @@ class NeuralPlexer(pl.LightningModule):
         batch_size = metadata["num_structid"]
         max(metadata["num_a_per_sample"])
         batch = self._prepare_protein_patch_indexers(batch)
-        if batch["misc"]["protein_only"] == False:
+        if batch["misc"]["protein_only"] is False:
             max(metadata["num_i_per_sample"])
 
             # Evaluate the contact map
@@ -3516,7 +3542,7 @@ class NeuralPlexer(pl.LightningModule):
                     break
         if not valid_gradients:
             print(
-                f"detected inf or nan values in gradients. not updating model parameters"
+                "detected inf or nan values in gradients. not updating model parameters"
             )
             self.zero_grad()
 
@@ -3573,7 +3599,9 @@ if __name__ == "__main__":
 
     from neuralplexer.data.pipeline import inplace_to_torch, process_smiles
     from neuralplexer.model.config import (
-        _attach_ligand_pretraining_task_config, get_base_config)
+        _attach_ligand_pretraining_task_config,
+        get_base_config,
+    )
 
     torch.set_printoptions(profile="full")
 
