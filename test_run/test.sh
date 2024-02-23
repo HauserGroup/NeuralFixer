@@ -1,8 +1,7 @@
 #!/bin/bash
-
+export KMP_DUPLICATE_LIB_OK=TRUE
 time neuralplexer-inference --task=batched_structure_sampling \
                        --input-receptor data/6cm4.pdb \
-                       --device cpu \
                        --input-ligand data/ChEBI_8356.sdf \
                        --use-template \
                        --input-template data/6cm4.pdb \
@@ -12,5 +11,4 @@ time neuralplexer-inference --task=batched_structure_sampling \
                        --chunk-size 8 \
                        --num-steps=40 \
                        --confidence \
-                       --save-pickle \
                        --sampler=langevin_simulated_annealing
