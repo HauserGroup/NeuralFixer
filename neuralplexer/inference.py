@@ -165,6 +165,7 @@ def multi_pose_sampling(
     struct_res_all, lig_res_all = [], []
     plddt_all, plddt_lig_all, plddt_struct_all = [], [], []
     chunk_size = args.chunk_size
+    ref_mol = None
     for chunk_id in range(args.n_samples // chunk_size):
         # Resample anchor node frames
         np_sample, mol = featurize_protein_and_ligands(
@@ -262,8 +263,6 @@ def multi_pose_sampling(
             np.array(np.vstack(plddt_struct_all)),
         )
 
-    else:
-        ref_mol = None
     if confidence:
         return ref_mol, plddt_all, plddt_lig_all
     return ref_mol
@@ -642,7 +641,10 @@ def main():
     if args.task == "single_sample_trajectory":
         single_sample_sampling(args, model, device=device)
     elif args.task == "batched_structure_sampling":
-        ligand_paths = list(args.input_ligand.split("|"))
+        if args.input_ligand is not None:
+            ligand_paths = list(args.input_ligand.split("|"))
+        else:
+            ligand_paths = None
         if not args.input_receptor.endswith(".pdb"):
             warnings.warn("Assuming the provided receptor input is a protein sequence")
             create_full_pdb_with_zero_coordinates(
@@ -657,7 +659,7 @@ def main():
             model,
             args.out_path,
             template_path=args.input_template,
-            separate_pdb=False,
+            separate_pdb=True,
             device=device,
         )
     # TODO: Remove CUDA requirement from these tasks
