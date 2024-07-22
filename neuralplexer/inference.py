@@ -196,11 +196,7 @@ def multi_pose_sampling(
         out_x2 = np.split(
             output_struct["receptor_padded"].cpu().numpy(), args.chunk_size
         )
-        if likelihood:
-            import pdb; pdb.set_trace()
-            batch_likelihood = model.run_likelihood_estimation(
-                sample, output_struct
-            )
+        
         if confidence:
             plddt, plddt_lig = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=True
