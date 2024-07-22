@@ -265,8 +265,8 @@ def multi_pose_sampling(
         )
     if score:
         # save np
-        import pdb; pdb.set_trace()
-        np.save(os.path.join(out_path, "score.npy"), np.array(sample["outputs"]["denoised_prediction"]))
+        for k in sample["outputs"]["denoised_prediction"]:
+            np.save(os.path.join(out_path, f"score_{k}.npy"), sample["outputs"]["denoised_prediction"][k].cpu().numpy())
 
     if confidence:
         return ref_mol, plddt_all, plddt_lig_all
