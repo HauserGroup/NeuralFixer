@@ -799,8 +799,6 @@ class NeuralPlexer(pl.LightningModule):
         self._run_contact_map_stack(batch, iter_id="confidence")
 
         conf_out = self._run_confidence_head(batch)
-        import pdb; pdb.set_trace()
-        score_out = self._run_score_head(batch)
         conf_rep = (
             conf_out["final_embedding_prot_res"][:, 0]
             .contiguous()
