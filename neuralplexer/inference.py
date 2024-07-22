@@ -196,7 +196,7 @@ def multi_pose_sampling(
         out_x2 = np.split(
             output_struct["receptor_padded"].cpu().numpy(), args.chunk_size
         )
-        
+
         if confidence:
             plddt, plddt_lig = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=True
@@ -227,7 +227,7 @@ def multi_pose_sampling(
                 lig_res_all.append(out_x1[struct_idx])
             if confidence:
                 plddt_all.append(plddt[struct_idx].item())
-                plddt_struct_all.append(sample["outputs"]["plddt"][struct_idx].numpy())
+                plddt_struct_all.append(sample["outputs"]["plddt"][struct_idx].cpu().numpy())
 
                 if plddt_lig is None:
                     plddt_lig_all.append(None)
