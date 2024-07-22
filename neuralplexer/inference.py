@@ -160,10 +160,12 @@ def multi_pose_sampling(
     chain_id=None,
     template_path=None,
     confidence=True,
+    likelihood=True,
     **kwargs,
 ):
     struct_res_all, lig_res_all = [], []
     plddt_all, plddt_lig_all, plddt_struct_all = [], [], []
+    likelihood_all, likelihood_lig_all, likelihood_struct_all = [], [], []
     chunk_size = args.chunk_size
     ref_mol = None
     for chunk_id in range(args.n_samples // chunk_size):
@@ -202,6 +204,10 @@ def multi_pose_sampling(
             sample = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=False
             )
+        if likelihood:
+            liklhd, liklkhd_lig = model.run_likelihood_estimation(
+                sample, output_struct
+            )
 
         for struct_idx in range(args.chunk_size):
             struct_res = {
@@ -230,6 +236,11 @@ def multi_pose_sampling(
                     plddt_lig_all.append(None)
                 else:
                     plddt_lig_all.append(plddt_lig[struct_idx].item())
+            if likelihood:
+                likelihood_all.append(liklhd[struct_idx].item())
+                likelihood_struct_all.append(sample["outputs"]["likelihood"][struct_idx].numpy())
+                likelihood_ligand = liklkhd_lig[struct_idx].itme() if liklkhd_lig else None
+                likelihood_lig_all.append(likelihood_ligand)
     if save_pdb:
         if separate_pdb:
             for struct_id, struct_res in enumerate(struct_res_all):
@@ -607,6 +618,7 @@ def main():
     parser.add_argument("--use-template", action="store_true")
     parser.add_argument("--csv-path", type=str)
     parser.add_argument("--confidence", action="store_true")
+    parser.add_argument("--likelihood", action="store_true")
     args = parser.parse_args()
     config = get_base_config()
 
