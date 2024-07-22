@@ -860,6 +860,7 @@ class NeuralPlexer(pl.LightningModule):
         batch = self._run_encoder_stack(batch, use_template=False, use_plddt=False)
         self._run_contact_map_stack(batch, iter_id="score")
 
+        import pdb; pdb.set_trace()
         score_out = self._run_score_head(batch)
         score_rep = (
             score_out["final_embedding_prot_res"][:, 0]
