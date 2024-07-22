@@ -196,6 +196,11 @@ def multi_pose_sampling(
         out_x2 = np.split(
             output_struct["receptor_padded"].cpu().numpy(), args.chunk_size
         )
+        if likelihood:
+            import pdb; pdb.set_trace()
+            batch_likelihood = model.run_likelihood_estimation(
+                sample, output_struct
+            )
         if confidence:
             plddt, plddt_lig = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=True
@@ -203,11 +208,6 @@ def multi_pose_sampling(
 
             sample = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=False
-            )
-        if likelihood:
-            import pdb; pdb.set_trace()
-            liklhd, liklkhd_lig = model.run_likelihood_estimation(
-                sample, output_struct
             )
 
         for struct_idx in range(args.chunk_size):
@@ -238,7 +238,7 @@ def multi_pose_sampling(
                 else:
                     plddt_lig_all.append(plddt_lig[struct_idx].item())
             if likelihood:
-                likelihood_all.append(liklhd[struct_idx].item())
+                likelihood_all.append(batch_likelihood[struct_idx].item())
                 likelihood_struct_all.append(sample["outputs"]["likelihood"][struct_idx].numpy())
                 likelihood_ligand = liklkhd_lig[struct_idx].itme() if liklkhd_lig else None
                 likelihood_lig_all.append(likelihood_ligand)
