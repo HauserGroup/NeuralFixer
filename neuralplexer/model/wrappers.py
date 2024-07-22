@@ -799,6 +799,8 @@ class NeuralPlexer(pl.LightningModule):
         self._run_contact_map_stack(batch, iter_id="confidence")
 
         conf_out = self._run_confidence_head(batch)
+        import pdb; pdb.set_trace()
+        score_out = self._run_score_head(batch)
         conf_rep = (
             conf_out["final_embedding_prot_res"][:, 0]
             .contiguous()
@@ -846,45 +848,6 @@ class NeuralPlexer(pl.LightningModule):
             return plddt_avg, plddt_avg_lig
         else:
             return batch
-    
-    def run_likelihood_estimation(self, batch, struct, return_avg_stats=False):
-        batch_size = batch["metadata"]["num_structid"]
-        batch["features"]["input_protein_coords"] = struct["receptor_padded"].clone()
-
-        if struct["ligands"] is not None:
-            batch["features"]["input_ligand_coords"] = struct["ligands"].clone()
-        else:
-            batch["features"]["input_ligand_coords"] = None
-
-        self._assign_timestep_encodings(batch, 0.0)
-        batch = self._run_encoder_stack(batch, use_template=False, use_plddt=False)
-        self._run_contact_map_stack(batch, iter_id="score")
-
-        import pdb; pdb.set_trace()
-        score_out = self._run_score_head(batch)
-        score_rep = (
-            score_out["final_embedding_prot_res"][:, 0]
-            .contiguous()
-            .view(batch_size, -1, self.config.score_head.fiber_dim)
-        )
-
-        if struct["ligands"] is not None:
-            score_rep_lig = (
-                score_out["final_embedding_lig_atom"][:, 0]
-                .contiguous()
-                .view(batch_size, -1, self.config.score_head.fiber_dim)
-            )
-            score_rep = torch.cat([score_rep, score_rep_lig], dim=1)
-
-        score_logits = F.log_softmax(self.score_head(score_rep), dim=-1) # TODO: confirm
-        batch["outputs"]["score_logits"] = score_logits
-        score_gram = torch.exp(score_logits)
-        batch["outputs"]["score"] = torch.cumsum(score_gram[:, :, :4], dim=-1).mean(
-            dim=-1
-        )
-
-        print("Score:", batch["outputs"]["score"].size())
-        return batch
 
     def _get_epoch_outputs(self, outs):
         preds = [v["out"] for v in outs]
