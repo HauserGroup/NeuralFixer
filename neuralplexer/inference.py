@@ -205,6 +205,7 @@ def multi_pose_sampling(
                 sample, output_struct, return_avg_stats=False
             )
         if likelihood:
+            import pdb; pdb.set_trace()
             liklhd, liklkhd_lig = model.run_likelihood_estimation(
                 sample, output_struct
             )
@@ -273,6 +274,12 @@ def multi_pose_sampling(
             os.path.join(out_path, "plddt_struct.npy"),
             np.array(np.vstack(plddt_struct_all)),
         )
+    if likelihood:
+        # save np
+        import pdb; pdb.set_trace()
+        np.save(os.path.join(out_path, "score.npy"), np.array(likelihood_all))
+        np.save(os.path.join(out_path, "score_lig.npy"), np.array(likelihood_lig_all))
+        np.save(os.path.join(out_path, "score_struct.npy"), np.array(np.vstack(likelihood_struct_all)))
 
     if confidence:
         return ref_mol, plddt_all, plddt_lig_all
