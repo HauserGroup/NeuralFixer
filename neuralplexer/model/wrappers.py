@@ -198,7 +198,7 @@ class NeuralPlexer(pl.LightningModule):
         observed_block_contacts=None,
         contact_prediction=True,
         infer_geometry_prior=False,
-        score=False,
+        score=True,
         affinity=False,
         use_template=False,
         **kwargs,

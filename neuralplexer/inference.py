@@ -160,12 +160,11 @@ def multi_pose_sampling(
     chain_id=None,
     template_path=None,
     confidence=True,
-    likelihood=True,
+    score=True,
     **kwargs,
 ):
     struct_res_all, lig_res_all = [], []
     plddt_all, plddt_lig_all, plddt_struct_all = [], [], []
-    likelihood_all, likelihood_lig_all, likelihood_struct_all = [], [], []
     chunk_size = args.chunk_size
     ref_mol = None
     for chunk_id in range(args.n_samples // chunk_size):
@@ -201,7 +200,6 @@ def multi_pose_sampling(
             plddt, plddt_lig = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=True
             )
-            import pdb; pdb.set_trace()
             sample = model.run_confidence_estimation(
                 sample, output_struct, return_avg_stats=False
             )
@@ -265,12 +263,10 @@ def multi_pose_sampling(
             os.path.join(out_path, "plddt_struct.npy"),
             np.array(np.vstack(plddt_struct_all)),
         )
-    if likelihood:
+    if score:
         # save np
         import pdb; pdb.set_trace()
-        np.save(os.path.join(out_path, "score.npy"), np.array(likelihood_all))
-        np.save(os.path.join(out_path, "score_lig.npy"), np.array(likelihood_lig_all))
-        np.save(os.path.join(out_path, "score_struct.npy"), np.array(np.vstack(likelihood_struct_all)))
+        np.save(os.path.join(out_path, "score.npy"), np.array(sample["outputs"]["denoised_prediction"]))
 
     if confidence:
         return ref_mol, plddt_all, plddt_lig_all
@@ -616,7 +612,7 @@ def main():
     parser.add_argument("--use-template", action="store_true")
     parser.add_argument("--csv-path", type=str)
     parser.add_argument("--confidence", action="store_true")
-    parser.add_argument("--likelihood", action="store_true")
+    parser.add_argument("--score", action="store_true")
     args = parser.parse_args()
     config = get_base_config()
 
